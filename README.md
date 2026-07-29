@@ -137,7 +137,7 @@ class ClienteRegular(Cliente):
 class ClientePremium(Cliente):
     def obtener_tipo(self) -> str:
         return "Premium (Descuento 10%)"
-
+```
 ## Repo Git
 https://github.com/catacode-tech/gestor_clientes
 
