@@ -1,6 +1,6 @@
 # Solution Tech — Gestor Inteligente de Clientes
 
-Sistema de gestión de clientes desarrollado en Python aplicando Programación Orientada a Objetos (POO), persistencia de datos relacional y no relacional, integración con APIs y una interfaz gráfica de usuario (GUI) con Tkinter.
+Sistema de gestión de clientes desarrollado en Python 3 bajo un esquema modular por capas. La solución aplica los principios avanzados de Programación Orientada a Objetos (POO), persistencia de datos relacional, servicios externos y una interfaz gráfica de usuario (GUI) con Tkinter.
 
 ---
 
@@ -8,11 +8,11 @@ Sistema de gestión de clientes desarrollado en Python aplicando Programación O
 
 El proyecto sigue una arquitectura por capas para garantizar el desacoplamiento y facilitar el mantenimiento:
 
-1. **Capa de Modelo (`cliente.py`)**: Define la jerarquía de clases utilizando POO. Aplica herencia y polimorfismo mediante una clase base `Cliente` y subclases especificas (`ClienteRegular`, `ClientePremium`, `ClienteCorporativo`).
-2. **Capa de Persistencia (`base_datos.py`)**: Encargada de gestionar la base de datos SQLite (`app_data.db`), sincronizar datos en JSON y exportar reportes en CSV.
-3. **Capa de Servicios (`servicios.py`)**: Simula servicios externos de verificación de identidad mediante API REST e integración de correo electrónico.
-4. **Capa de Interfaz Gráfica (`gui.py`)**: Desarrollada con Tkinter y `ttk`, proporcionando un formulario intuitivo, tabla dinámica de visualización de datos y manejo de eventos.
-5. **Manejo de Excepciones y Logs (`excepciones.py`, `logger_config.py`)**: Excepciones personalizadas para el control de errores de dominio y registro centralizado de eventos del sistema.
+<u>1. Capa de Modelo (`cliente.py`)</u>: Define la jerarquía de clases utilizando POO. Aplica herencia y polimorfismo mediante una clase base `Cliente` y subclases especificas (`ClienteRegular`, `ClientePremium`, `ClienteCorporativo`).
+<u>2. Capa de Persistencia (`base_datos.py`)</u>: Encargada de gestionar la base de datos SQLite (`app_data.db`), sincronizar datos en JSON y exportar reportes en CSV.
+<u>3. Capa de Servicios (`servicios.py`)</u>: Simula servicios externos de verificación de identidad mediante API REST e integración de correo electrónico.
+<u>4. Capa de Interfaz Gráfica (`gui.py`)</u>: Desarrollada con Tkinter y `ttk`, proporcionando un formulario intuitivo, tabla dinámica de visualización de datos y manejo de eventos.
+<u>5. Manejo de Excepciones y Logs (`excepciones.py`, `logger_config.py`)</u>: Excepciones personalizadas para el control de errores de dominio y registro centralizado de eventos del sistema.
 
 ---
 
@@ -20,98 +20,105 @@ El proyecto sigue una arquitectura por capas para garantizar el desacoplamiento 
 
 ```mermaid
 classDiagram
-    %% --- cliente.py ---
-    class Cliente {
-        <<Abstract>>
-        +str id
-        +str nombre
-        +str email
-        +str telefono
-        +str direccion
-        +obtener_tipo()* str
+    direction TB
+
+    %% Capa de Modelo
+    namespace Capa_Modelo {
+        class Cliente {
+            -id
+            -nombre
+            -_email
+            -_telefono
+            -direccion
+            +email : property
+            +telefono : property
+            +obtener_tipo() str
+            +calcular_descuento(monto) float
+            +__str__() str
+            +__eq__(otro) bool
+        }
+
+        class ClienteRegular {
+            +obtener_tipo() str
+            +calcular_descuento(monto) float
+        }
+
+        class ClientePremium {
+            +nivel_fidelidad : int
+            +obtener_tipo() str
+            +calcular_descuento(monto) float
+        }
+
+        class ClienteCorporativo {
+            +empresa : str
+            +rtu : str
+            +obtener_tipo() str
+            +calcular_descuento(monto) float
+        }
     }
 
-    class ClienteRegular {
-        +obtener_tipo() str
+    %% Capa de Persistencia
+    namespace Capa_Persistencia {
+        class BaseDatos {
+            -db_path : str
+            +conectar()
+            +guardar_cliente(cliente)
+            +obtener_clientes() list
+            +exportar_json(ruta)
+            +exportar_csv(ruta)
+        }
     }
 
-    class ClientePremium {
-        +obtener_tipo() str
+    %% Capa de Servicios
+    namespace Capa_Servicios {
+        class ServicioExterno {
+            +verificar_identidad(rtu) bool
+            +enviar_correo_bienvenida(email)
+        }
     }
 
-    class ClienteCorporativo {
-        +str empresa
-        +str rtu
-        +obtener_tipo() str
+    %% Capa de Presentación
+    namespace Capa_Presentacion {
+        class InterfazGUI {
+            -master
+            -treeview
+            +crear_widgets()
+            +agregar_cliente_gui()
+            +actualizar_tabla()
+        }
+
+        class Main {
+            +main()
+        }
     }
 
+    %% Soporte Transversal
+    namespace Soporte_Transversal {
+        class EmailInvalidoError {
+        }
+        class TelefonoInvalidoError {
+        }
+        class LoggerConfig {
+            +logger
+        }
+    }
+
+    %% Relaciones de Herencia (Modelo)
     Cliente <|-- ClienteRegular
     Cliente <|-- ClientePremium
     Cliente <|-- ClienteCorporativo
 
-    %% --- base_datos.py ---
-    class GestorBaseDatos {
-        -str db_path
-        -str json_path
-        -str csv_path
-        -_inicializar_bd()
-        +guardar_cliente(cliente: Cliente)
-        +eliminar_cliente(cliente_id: str)
-        +obtener_todos() list~Cliente~
-        +exportar_csv()
-        -_sincronizar_json()
-    }
-
-    %% --- servicios.py ---
-    class ServicioExternoAPI {
-        +validar_identidad_api(c_id: str)$ bool
-        +enviar_email_bienvenida(email: str, nombre: str)$ bool
-    }
-
-    %% --- excepciones.py ---
-    class ClienteError {
-        <<Exception>>
-    }
-
-    class BaseDatosError {
-        <<Exception>>
-    }
-
-    %% --- gui.py ---
-    class AppSolutionTech {
-        +GestorBaseDatos db
-        +Entry ent_id
-        +Entry ent_nombre
-        +Entry ent_email
-        +Entry ent_telefono
-        +Entry ent_direccion
-        +Combobox combo_tipo
-        +Treeview tabla
-        +crear_componentes()
-        +guardar_cliente()
-        +eliminar_cliente()
-        +exportar_csv()
-        +cargar_tabla()
-        +seleccionar_registro(event)
-        +limpiar_campos()
-    }
-
-    %% --- main.py ---
-    class MainScript {
-        <<Script>>
-        +mostrar_encabezado()
-        +mostrar_despedida()
-    }
-
-    %% --- Relaciones del Sistema ---
-    MainScript ..> AppSolutionTech : instancia
-    AppSolutionTech --> GestorBaseDatos : usa
-    AppSolutionTech ..> ServicioExternoAPI : consulta
-    AppSolutionTech ..> Cliente : gestiona
-    GestorBaseDatos ..> Cliente : persiste
-    GestorBaseDatos ..> BaseDatosError : lanza
-    AppSolutionTech ..> ClienteError : maneja
-    AppSolutionTech ..> BaseDatosError : maneja
+    %% Relaciones entre capas
+    Main ..> InterfazGUI : inicia
+    InterfazGUI --> BaseDatos : utiliza
+    InterfazGUI --> ServicioExterno : consulta
+    InterfazGUI ..> Cliente : administra
+    BaseDatos ..> Cliente : persiste
+    
+    %% Uso de excepciones y logs
+    Cliente ..> EmailInvalidoError : lanza
+    Cliente ..> TelefonoInvalidoError : lanza
+    Cliente ..> LoggerConfig : registra
 ```
 ## Capturas de Pantalla y Demostración
 
@@ -125,18 +132,6 @@ classDiagram
 ![Salida de Terminal](docs/organizacion_archivos_proyecto.png)
 
 ---
-
-## Fragmentos de Código Destacados
-
-### Polimorfismo en la Jerarquía de Clientes (`cliente.py`)
-```python
-class ClienteRegular(Cliente):
-    def obtener_tipo(self) -> str:
-        return "Regular"
-
-class ClientePremium(Cliente):
-    def obtener_tipo(self) -> str:
-        return "Premium (Descuento 10%)"
 ```
 ## Repo Git
 https://github.com/catacode-tech/gestor_clientes
